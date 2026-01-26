@@ -6,7 +6,11 @@
 #'
 #' @param data A data frame.
 #' @param id_col,visit_col,trimester_col,weight_col,height_col,age_col,elev_col,EI_kcal_col Column names (unquoted).
-#' @param ethnicity Character. Currently supports "African" (adds ethnicity coefficient), otherwise no ethnicity term.
+#' @param ethnicity_col Optional column (unquoted) containing ethnicity codes per row.
+#'   If provided, must contain values: "A", "AA", "AS", "W", "H", or "NA" (not case sensitive).
+#' @param ethnicity Character code used when `ethnicity_col` is NULL (single ethnicity for all rows).
+#'   One of: "A" (African), "AA" (African living outside Africa), "AS" (Asian),
+#'   "W" (White), "H" (Hispanic), "NA" (not available). Not case sensitive.
 #' @param pregnancy Logical. If TRUE, adds trimester corrections for trimester 2 and 3.
 #' @param preg_corr_tri2 Numeric. Pregnancy correction (MJ/day) for trimester 2.
 #' @param preg_corr_tri3 Numeric. Pregnancy correction (MJ/day) for trimester 3.
@@ -25,7 +29,8 @@ run_misreport_pipeline <- function(
     age_col = matage,
     elev_col = elevation_m,
     EI_kcal_col = total_Energykcal,
-    ethnicity = "African",
+    ethnicity_col = NULL,
+    ethnicity = "A",
     pregnancy = TRUE,
     preg_corr_tri2 = 2.53,
     preg_corr_tri3 = 3.53,
@@ -65,14 +70,38 @@ run_misreport_pipeline <- function(
   coef_Age2 <- 0.00033079019
   coef_Age3 <- -0.000001852
   coef_lnElev <- 0.09126350903
-  coef_Ethnicity_A <- 0.01939639976
   coef_Height_lnElev <- -0.00067594646
   coef_Age_lnElev <- 0.00201815477
   coef_Age2_lnElev <- -0.00002262281
   coef_sex <- -0.04091711710
   coef_sex_lnElev <- -0.00694699228
 
-  eth_term <- if (tolower(ethnicity) == "african") coef_Ethnicity_A else 0
+  # ---- Ethnicity coefficients ----
+  ethnicity_coefs <- c(
+    A  =  0.01939639976,     # African
+    AA = -0.03899332615,     # African living outside Africa
+    AS =  0.00623768257,     # Asian
+    W  =  0.02625775059,     # White
+    H  = -0.01554772302,     # Hispanic
+    NA =  0.00358921276      # Not available
+  )
+
+  # Build ethnicity code per row (column if provided; otherwise constant)
+  if (is.null(ethnicity_col)) {
+    d <- dplyr::mutate(d, eth_code = toupper(ethnicity))
+  } else {
+    d <- dplyr::mutate(d, eth_code = toupper({{ ethnicity_col }}))
+  }
+
+  # Unknown codes -> NA (warn once)
+  bad <- !d$eth_code %in% names(ethnicity_coefs)
+  if (any(bad, na.rm = TRUE)) {
+    warning("Some ethnicity codes not recognized. Using 'NA' coefficient for those rows.")
+    d$eth_code[bad] <- "NA"
+  }
+
+  # Row-specific ethnicity term
+  d <- dplyr::mutate(d, eth_term = unname(ethnicity_coefs[eth_code]))
 
   # 4) ln_TEE and pTEE
   d <- d |>
