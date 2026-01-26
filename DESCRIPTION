@@ -14,3 +14,5 @@ Imports:
     tidyr
 Suggests: 
     haven
+URL: https://github.com/Lidya1888/misreportTools
+BugReports: https://github.com/Lidya1888/misreportTools/issues
