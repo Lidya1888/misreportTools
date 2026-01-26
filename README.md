@@ -47,4 +47,4 @@ misreport_counts(d_eth)
 misreport_counts(d_eth, group = trimester)
 If you use misreportTools in your work, please cite:
 # Reference
-Abebe L, Abdullahi YY. misreportTools: A system-based framework for identifying dietary energy misreporting using predicted energy expenditure. GitHub repository.
+Abebe L, Abdullahi YY. misreportTools: Predicting misreporting using predicted energy expenditure algorithm. GitHub repository.
