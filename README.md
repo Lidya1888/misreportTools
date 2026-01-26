@@ -12,7 +12,7 @@ run_misreport_pipeline(
   ethnicity = "A",
   pregnancy = TRUE
 )
-# Example for homogenious ethnicity
+# Example: Homogeneous ethnicity (all participants African)
 library(misreportTools)
 library(haven)
 
@@ -23,7 +23,7 @@ d_eth <- run_misreport_pipeline(
   ethnicity = "A",
   pregnancy = TRUE
 )
-# Example for hetrogenious ethnicity and non pregnant
+# Example: Heterogeneous ethnicity (non-pregnant population)
 usdata <- usdata %>%
   dplyr::mutate(eth_code = dplyr::recode(
     ethnicity_us,
