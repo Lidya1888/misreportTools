@@ -6,6 +6,7 @@
 #'
 #' @param data A data frame.
 #' @param id_col,visit_col,trimester_col,weight_col,height_col,age_col,elev_col,EI_kcal_col Column names (unquoted).
+#' @param visit_col Optional visit/order column (unquoted). If NULL, visit ordering is skipped.
 #' @param ethnicity_col Optional column (unquoted) containing ethnicity codes per row.
 #'   If provided, must contain values: "A", "AA", "AS", "W", "H", or "NA" (not case sensitive).
 #' @param ethnicity Character code used when `ethnicity_col` is NULL (single ethnicity for all rows).
@@ -22,7 +23,7 @@
 run_misreport_pipeline <- function(
     data,
     id_col = champs_id_ps,
-    visit_col = drvisitcode,
+    visit_col = NULL,              #  optional
     trimester_col = trimester,
     weight_col = weight_peres,
     height_col = height_peres,
@@ -41,14 +42,28 @@ run_misreport_pipeline <- function(
     pi_upper_int  = 2.7668
 ) {
 
-  # 1) unique visits + ordered fill for weight/height
-  d <- data |>
-    dplyr::distinct({{ id_col }}, {{ visit_col }}, {{ trimester_col }}, .keep_all = TRUE) |>
-    dplyr::group_by({{ id_col }}) |>
-    dplyr::arrange({{ visit_col }}) |>
-    tidyr::fill({{ weight_col }}, .direction = "down") |>
-    tidyr::fill({{ height_col }}, .direction = "down") |>
-    dplyr::ungroup()
+  # 1) unique rows + fill weight/height within person
+  #    If visit_col is available, order within person using visit_col.
+  if (is.null(visit_col)) {
+
+    d <- data |>
+      dplyr::distinct({{ id_col }}, {{ trimester_col }}, .keep_all = TRUE) |>
+      dplyr::group_by({{ id_col }}) |>
+      tidyr::fill({{ weight_col }}, .direction = "down") |>
+      tidyr::fill({{ height_col }}, .direction = "down") |>
+      dplyr::ungroup()
+
+  } else {
+
+    d <- data |>
+      dplyr::distinct({{ id_col }}, {{ visit_col }}, {{ trimester_col }}, .keep_all = TRUE) |>
+      dplyr::group_by({{ id_col }}) |>
+      dplyr::arrange({{ visit_col }}) |>
+      tidyr::fill({{ weight_col }}, .direction = "down") |>
+      tidyr::fill({{ height_col }}, .direction = "down") |>
+      dplyr::ungroup()
+
+  }
 
   # 2) build model terms
   d <- d |>
