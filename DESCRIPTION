@@ -2,8 +2,8 @@ Package: misreportTools
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Lidya", "Abebe", , "lidyagenene@gmail.com", role = c("aut", "cre"))
+Description: What the package does (This package is to check misreporting using the probability of erroneous self-reported energy intake using the method proposed by Bajunaid et al which compares reported energy intake to predicted Total Energy Expenditure (TEE) values developed using doubly-labeled water).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
